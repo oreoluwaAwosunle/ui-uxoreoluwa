@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Fit Check: Extension Overlay Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --host-bg: #F4F5F6; --host-surface: #FFFFFF; --host-ink: #24272B; --host-soft: #6B7075; --host-border: #DFE2E5;
+    --ext-bg: #F7F5F1; --ext-surface: #FFFFFF; --ext-ink: #1E1B16; --ext-soft: #746F64; --ext-border: #E4DFD5;
+    --accent: #25514C; --accent-ink: #FFFFFF;
+    --match: #2E7D4F; --gap: #B07A1E; --alert: #B23A2E;
+    --shadow: 0 22px 44px -24px rgba(20, 20, 20, 0.35);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --host-bg: #1B1D1F; --host-surface: #232527; --host-ink: #ECEDEE; --host-soft: #9AA0A6; --host-border: #33363A;
+      --ext-bg: #17140F; --ext-surface: #211D17; --ext-ink: #F2EEE6; --ext-soft: #A79E8E; --ext-border: #332C22;
+      --accent: #4C8A80; --accent-ink: #0B1614;
+      --match: #5FBE86; --gap: #D9A94A; --alert: #E2685A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --host-bg: #1B1D1F; --host-surface: #232527; --host-ink: #ECEDEE; --host-soft: #9AA0A6; --host-border: #33363A;
+    --ext-bg: #17140F; --ext-surface: #211D17; --ext-ink: #F2EEE6; --ext-soft: #A79E8E; --ext-border: #332C22;
+    --accent: #4C8A80; --accent-ink: #0B1614;
+    --match: #5FBE86; --gap: #D9A94A; --alert: #E2685A;
+  }
+
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--host-bg); font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* ---------- Prototype control strip (not part of the concept, just for testing) ---------- */
+
+  .proto-strip {
+    background: #111214;
+    color: #D7D9DC;
+    font-size: 0.76rem;
+    padding: 9px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .proto-strip span { color: #8A8E93; }
+
+  .tab-switch {
+    background: #232427;
+    border: 1px solid #34363A;
+    color: #D7D9DC;
+    font-family: inherit;
+    font-size: 0.76rem;
+    padding: 5px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+
+  .tab-switch.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+  /* ---------- Fake browser chrome ---------- */
+
+  .browser-chrome {
+    background: var(--host-surface);
+    border-bottom: 1px solid var(--host-border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dots { display: flex; gap: 6px; }
+  .dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--host-border); }
+
+  .url-bar {
+    flex: 1;
+    background: var(--host-bg);
+    border: 1px solid var(--host-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    color: var(--host-soft);
+    font-family: 'Inter', monospace;
+  }
+
+  /* ---------- Host page (generic job board) ---------- */
+
+  .host-page { max-width: 760px; margin: 0 auto; padding: 28px 20px 90px; }
+
+  .host-header {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--host-ink);
+    margin-bottom: 22px;
+  }
+
+  .posting-card {
+    background: var(--host-surface);
+    border: 1px solid var(--host-border);
+    border-radius: 10px;
+    padding: 26px;
+  }
+
+  .posting-company { color: var(--host-soft); font-size: 0.85rem; margin: 0 0 4px; }
+  .posting-role { font-size: 1.3rem; font-weight: 700; color: var(--host-ink); margin: 0 0 16px; }
+  .posting-body { color: var(--host-ink); font-size: 0.9rem; line-height: 1.7; }
+  .posting-body h3 { font-size: 0.85rem; margin: 18px 0 8px; }
+  .posting-body ul { margin: 0; padding-left: 18px; }
+  .posting-body li { margin-bottom: 6px; }
+
+  .posting-apply {
+    margin-top: 22px;
+    background: #2C63E8;
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ---------- Extension badge + panel ---------- */
+
+  h1, h2, .ext-verdict-title { font-family: 'Lora', Georgia, serif; }
+
+  .ext-badge {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    padding: 11px 16px;
+    border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    z-index: 40;
+  }
+
+  .ext-badge:focus-visible { outline: 2px solid var(--host-ink); outline-offset: 2px; }
+  .ext-badge-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .ext-badge-dot.match { background: #8FE3B0; }
+  .ext-badge-dot.gap { background: #F2CC7E; }
+  .ext-badge-dot.alert { background: #F2A79A; }
+
+  .ext-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 78px;
+    width: 340px;
+    max-width: calc(100vw - 40px);
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    background: var(--ext-surface);
+    border: 1px solid var(--ext-border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 18px;
+    z-index: 41;
+    color: var(--ext-ink);
+  }
+
+  .ext-panel[hidden] { display: none; }
+
+  .ext-eyebrow { font-size: 0.72rem; font-weight: 600; color: var(--ext-soft); margin: 0 0 10px; }
+
+  .ext-verdict {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--ext-border);
+    margin-bottom: 12px;
+  }
+
+  .ext-verdict.tone-match { background: color-mix(in srgb, var(--match) 12%, var(--ext-surface)); border-color: var(--match); }
+  .ext-verdict.tone-gap { background: color-mix(in srgb, var(--gap) 12%, var(--ext-surface)); border-color: var(--gap); }
+  .ext-verdict.tone-alert { background: color-mix(in srgb, var(--alert) 12%, var(--ext-surface)); border-color: var(--alert); }
+
+  .ext-verdict-title { font-size: 0.95rem; font-weight: 600; margin: 0 0 4px; }
+  .ext-verdict-sub { font-size: 0.8rem; color: var(--ext-soft); margin: 0; line-height: 1.5; }
+
+  .ext-req { border: 1px solid var(--ext-border); border-radius: 9px; padding: 10px 12px; margin-bottom: 8px; }
+  .ext-req-head { display: flex; align-items: center; gap: 7px; }
+  .ext-req-tag { font-size: 0.64rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; flex-shrink: 0; }
+  .ext-req-tag.match { background: color-mix(in srgb, var(--match) 18%, var(--ext-surface)); color: var(--match); }
+  .ext-req-tag.gap { background: color-mix(in srgb, var(--gap) 18%, var(--ext-surface)); color: var(--gap); }
+  .ext-req-label { font-size: 0.82rem; font-weight: 600; }
+  .ext-req-note { font-size: 0.76rem; color: var(--ext-soft); margin: 4px 0 0; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="proto-strip">
+  <span>Prototype control, switch which posting is "open":</span>
+  <button type="button" class="tab-switch is-active" data-key="voltra-product-designer">Voltra</button>
+  <button type="button" class="tab-switch" data-key="brightpath-junior-designer">Brightpath</button>
+  <button type="button" class="tab-switch" data-key="ninera-labs-designer">Ninera Labs</button>
+</div>
+
+<div class="browser-chrome">
+  <div class="dots"><span></span><span></span><span></span></div>
+  <div class="url-bar" id="fake-url">jobboard.example/postings/voltra-product-designer</div>
+</div>
+
+<div class="host-page">
+  <div class="host-header">JobBoard</div>
+  <div class="posting-card">
+    <p class="posting-company" id="posting-company">Voltra</p>
+    <h1 class="posting-role" id="posting-role">Product Designer (Fintech)</h1>
+    <div class="posting-body" id="posting-body"></div>
+    <button type="button" class="posting-apply">Apply now</button>
+  </div>
+</div>
+
+<button type="button" class="ext-badge" id="ext-badge">
+  <span class="ext-badge-dot" id="ext-badge-dot"></span>
+  Fit Check
+</button>
+
+<div class="ext-panel" id="ext-panel" hidden>
+  <p class="ext-eyebrow" id="ext-eyebrow">Reading this posting</p>
+  <div id="ext-verdict-box"></div>
+  <div id="ext-req-list"></div>
+</div>
+
+<script>
+(function () {
+  const CV = "Self-taught product designer based in Lagos. Applied product design experience since 2024 (about 1.5 years), including independent work and one supporting-role engagement. Founder of PhonePlugNG, an IMEI-verified phone resale business, designed and built the brand, landing page, and admin tooling end to end. Independently audited UBA's internet banking login flow, which reached UBA Africa's CEO. Proficient in Figma, comfortable prototyping in HTML/JS. Portfolio: uiuxoreoluwa.netlify.app";
+
+  const POSTINGS = {
+    "voltra-product-designer": {
+      company: "Voltra", role: "Product Designer (Fintech)",
+      bodyHtml: "<p>Voltra is hiring a Product Designer to help shape our consumer banking app. You'll work closely with engineering and product to design flows that make everyday banking simple and trustworthy.</p><h3>Requirements</h3><ul><li>3+ years of product design experience</li><li>Strong proficiency in Figma</li><li>Experience designing for fintech or financial products</li><li>Portfolio demonstrating end-to-end product thinking</li></ul>",
+      contradictory: false,
+      requirements: [
+        { label: "3+ years of product design experience", check: () => /1\.5\s*years?/i.test(CV) ? "gap" : "match", note: "Your applied experience runs about 1.5 years, this posting asks for 3+." },
+        { label: "Strong proficiency in Figma", check: () => /figma/i.test(CV) ? "match" : "gap", note: "" },
+        { label: "Experience designing for fintech or financial products", check: () => /(uba|bank|fintech)/i.test(CV) ? "match" : "gap", note: "Your UBA banking audit covers this, even though it wasn't a formal engagement." },
+        { label: "Portfolio demonstrating end-to-end product thinking", check: () => /(portfolio|netlify)/i.test(CV) ? "match" : "gap", note: "" }
+      ]
+    },
+    "brightpath-junior-designer": {
+      company: "Brightpath", role: "Junior Product Designer",
+      bodyHtml: "<p>Brightpath is looking for a Junior Product Designer to join our small, fast-moving team. Great for someone early in their career with a strong portfolio, even from self-directed or personal projects.</p><h3>Requirements</h3><ul><li>0\u20132 years experience, or a strong self-directed portfolio</li><li>Comfortable working in Figma</li><li>Able to explain design decisions clearly</li><li>Portfolio showing real or self-initiated projects</li></ul>",
+      contradictory: false,
+      requirements: [
+        { label: "0\u20132 years experience, or a strong self-directed portfolio", check: () => "match", note: "" },
+        { label: "Comfortable working in Figma", check: () => /figma/i.test(CV) ? "match" : "gap", note: "" },
+        { label: "Able to explain design decisions clearly", check: () => /(audit|design)/i.test(CV) ? "match" : "gap", note: "" },
+        { label: "Portfolio showing real or self-initiated projects", check: () => /(portfolio|phoneplugng|netlify)/i.test(CV) ? "match" : "gap", note: "" }
+      ]
+    },
+    "ninera-labs-designer": {
+      company: "Ninera Labs", role: "Junior / Entry-Level Product Designer",
+      bodyHtml: "<p>Ninera Labs is a fast-paced startup looking for a Junior/Entry-Level Product Designer ready to wear many hats.</p><h3>Requirements</h3><ul><li>5+ years of commercial UI/UX experience required</li><li>Figma proficiency</li><li>Comfortable in a fast-paced startup, wearing many hats</li></ul>",
+      contradictory: true,
+      requirements: [
+        { label: "5+ years of commercial UI/UX experience required", check: () => /1\.5\s*years?/i.test(CV) ? "gap" : "match", note: "Your applied experience is about 1.5 years, well under the 5+ this line asks for." },
+        { label: "Figma proficiency", check: () => /figma/i.test(CV) ? "match" : "gap", note: "" },
+        { label: "Comfortable in a fast-paced startup, wearing many hats", check: () => "match", note: "" }
+      ]
+    }
+  };
+
+  const postingCompany = document.getElementById("posting-company");
+  const postingRole = document.getElementById("posting-role");
+  const postingBody = document.getElementById("posting-body");
+  const fakeUrl = document.getElementById("fake-url");
+  const badge = document.getElementById("ext-badge");
+  const badgeDot = document.getElementById("ext-badge-dot");
+  const panel = document.getElementById("ext-panel");
+  const eyebrow = document.getElementById("ext-eyebrow");
+  const verdictBox = document.getElementById("ext-verdict-box");
+  const reqList = document.getElementById("ext-req-list");
+
+  function evaluate(posting) {
+    const results = posting.requirements.map((r) => ({ label: r.label, status: r.check(), note: r.note }));
+    const gaps = results.filter((r) => r.status === "gap").length;
+    let tone, title, sub;
+    if (posting.contradictory) {
+      tone = "alert"; title = "This posting contradicts itself";
+      sub = "Labeled entry-level, but at least one requirement asks for senior-level experience.";
+    } else if (gaps === 0) {
+      tone = "match"; title = "Go ahead \u2014 solid fit"; sub = "You meet every requirement listed.";
+    } else {
+      tone = "gap"; title = "Worth applying, it's a stretch";
+      sub = gaps + " of " + results.length + " requirements are a gap right now.";
+    }
+    return { tone, title, sub, results };
+  }
+
+  function render(key) {
+    const posting = POSTINGS[key];
+    postingCompany.textContent = posting.company;
+    postingRole.textContent = posting.role;
+    postingBody.innerHTML = posting.bodyHtml;
+    fakeUrl.textContent = "jobboard.example/postings/" + key;
+
+    const result = evaluate(posting);
+    badgeDot.className = "ext-badge-dot " + result.tone;
+    eyebrow.textContent = "Reading this posting \u2014 " + posting.company;
+
+    verdictBox.innerHTML =
+      '<div class="ext-verdict tone-' + result.tone + '">' +
+      '<p class="ext-verdict-title">' + result.title + '</p>' +
+      '<p class="ext-verdict-sub">' + result.sub + '</p></div>';
+
+    reqList.innerHTML = "";
+    result.results.forEach((r) => {
+      const el = document.createElement("div");
+      el.className = "ext-req";
+      let html = '<div class="ext-req-head"><span class="ext-req-tag ' + r.status + '">' + (r.status === "match" ? "MATCH" : "GAP") + '</span>' +
+        '<span class="ext-req-label">' + r.label + '</span></div>';
+      if (r.note) html += '<p class="ext-req-note">' + r.note + '</p>';
+      el.innerHTML = html;
+      reqList.appendChild(el);
+    });
+  }
+
+  document.querySelectorAll(".tab-switch").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-switch").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      render(btn.dataset.key);
+    });
+  });
+
+  badge.addEventListener("click", () => { panel.hidden = !panel.hidden; });
+
+  render("voltra-product-designer");
+})();
+</script>
+
+</body>
+</html>

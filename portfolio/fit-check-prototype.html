@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Fit Check: AI Job Research Assistant Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F1;
+    --surface: #FFFFFF;
+    --ink: #1E1B16;
+    --ink-soft: #746F64;
+    --border: #E4DFD5;
+    --accent: #25514C;
+    --accent-ink: #FFFFFF;
+    --match: #2E7D4F;
+    --gap: #B07A1E;
+    --alert: #B23A2E;
+    --shadow: 0 20px 40px -26px rgba(30, 27, 22, 0.28);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140F; --surface: #211D17; --ink: #F2EEE6; --ink-soft: #A79E8E;
+      --border: #332C22; --accent: #4C8A80; --accent-ink: #0B1614;
+      --match: #5FBE86; --gap: #D9A94A; --alert: #E2685A;
+      --shadow: 0 20px 40px -26px rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140F; --surface: #211D17; --ink: #F2EEE6; --ink-soft: #A79E8E;
+    --border: #332C22; --accent: #4C8A80; --accent-ink: #0B1614;
+    --match: #5FBE86; --gap: #D9A94A; --alert: #E2685A;
+    --shadow: 0 20px 40px -26px rgba(0, 0, 0, 0.55);
+  }
+
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, .btn-primary, .verdict-title { font-family: 'Lora', Georgia, serif; }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 22px 72px;
+  }
+
+  header.top { margin-bottom: 8px; }
+
+  h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 6px; }
+  .subtitle { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 32px; line-height: 1.5; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 12px;
+    resize: vertical;
+  }
+
+  textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .url-row { display: flex; gap: 8px; }
+  .url-row input { flex: 1; min-width: 0; }
+
+  .toggle-text {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 4px;
+  }
+
+  .hint { font-size: 0.76rem; color: var(--ink-soft); margin-top: 6px; line-height: 1.5; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    margin-top: 18px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-primary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .btn-secondary {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-secondary:focus-visible { outline: 2px solid var(--accent); }
+
+  /* ---------- Result ---------- */
+
+  #result { display: none; }
+  #result.is-visible { display: block; }
+
+  .verdict {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .verdict.tone-match { background: color-mix(in srgb, var(--match) 12%, var(--surface)); border-color: var(--match); }
+  .verdict.tone-gap { background: color-mix(in srgb, var(--gap) 12%, var(--surface)); border-color: var(--gap); }
+  .verdict.tone-alert { background: color-mix(in srgb, var(--alert) 12%, var(--surface)); border-color: var(--alert); }
+
+  .verdict-title { font-size: 1.02rem; font-weight: 600; margin: 0 0 4px; }
+  .verdict-sub { font-size: 0.85rem; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+
+  .req-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .req {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .req-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+
+  .req-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .req-tag.match { background: color-mix(in srgb, var(--match) 18%, var(--surface)); color: var(--match); }
+  .req-tag.gap { background: color-mix(in srgb, var(--gap) 18%, var(--surface)); color: var(--gap); }
+
+  .req-label { font-size: 0.88rem; font-weight: 600; }
+  .req-note { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; margin: 4px 0 0; }
+
+  .ref-toggle {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 6px 0 0;
+  }
+
+  .ref-block {
+    display: none;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .ref-block.is-open { display: block; }
+
+  .save-row { margin-top: 18px; display: flex; justify-content: flex-end; }
+
+  /* ---------- Saved list ---------- */
+
+  .saved-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .saved-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .saved-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .saved-dot.match { background: var(--match); }
+  .saved-dot.gap { background: var(--gap); }
+  .saved-dot.alert { background: var(--alert); }
+
+  .saved-main { flex: 1; min-width: 0; }
+  .saved-company { font-size: 0.88rem; font-weight: 600; }
+  .saved-meta { font-size: 0.76rem; color: var(--ink-soft); }
+
+  .saved-delete {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+
+  .saved-delete:hover { color: var(--alert); }
+  .saved-delete:focus-visible { outline: 2px solid var(--accent); }
+
+  .empty-note { font-size: 0.85rem; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="top">
+    <h1>Fit Check</h1>
+    <p class="subtitle">Paste a job posting and your CV. Get a per-requirement read on where you match, where it's a stretch, and whether the posting contradicts itself &mdash; not a keyword score.</p>
+  </header>
+
+  <section class="card">
+    <div class="field">
+      <label for="cv-input">Your CV / profile</label>
+      <textarea id="cv-input" rows="5">Self-taught product designer based in Lagos. Applied product design experience since 2024 (about 1.5 years), including independent work and one supporting-role engagement. Founder of PhonePlugNG, an IMEI-verified phone resale business, designed and built the brand, landing page, and admin tooling end to end. Independently audited UBA's internet banking login flow, which reached UBA Africa's CEO. Proficient in Figma, comfortable prototyping in HTML/JS. Portfolio: uiuxoreoluwa.netlify.app</textarea>
+    </div>
+
+    <div class="field">
+      <label for="url-input">Job posting URL</label>
+      <div class="url-row">
+        <input type="text" id="url-input" placeholder="Try: example.com/voltra-product-designer" />
+      </div>
+      <button type="button" class="toggle-text" id="toggle-text-btn">or paste the posting text instead</button>
+      <div class="hint" id="url-hint">Try one of: <em>voltra-product-designer</em>, <em>brightpath-junior-designer</em>, <em>ninera-labs-designer</em></div>
+    </div>
+
+    <div class="field" id="text-field" style="display:none;">
+      <label for="text-input">Job posting text</label>
+      <textarea id="text-input" rows="6" placeholder="Paste the full posting here"></textarea>
+    </div>
+
+    <button type="button" class="btn-primary" id="check-btn">Check fit</button>
+  </section>
+
+  <section class="card" id="result">
+    <div id="verdict-box"></div>
+    <div class="req-list" id="req-list"></div>
+    <div class="save-row">
+      <button type="button" class="btn-secondary" id="save-btn">Save to list</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 style="font-size:1rem; margin:0 0 14px;">Saved</h2>
+    <div class="saved-list" id="saved-list"></div>
+    <p class="empty-note" id="empty-note">Nothing saved yet &mdash; check a posting and save it to start a list.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  const POSTINGS = {
+    "voltra-product-designer": {
+      company: "Voltra",
+      role: "Product Designer (Fintech)",
+      contradictory: false,
+      requirements: [
+        { label: "3+ years of product design experience", check: (cv) => /1\.5\s*years?/i.test(cv) ? "gap" : "match",
+          gapNote: "Your applied experience runs about 1.5 years, this posting asks for 3+.",
+          ref: "A CV built for a 3+-year requirement usually shows 2 to 3 shipped products end to end, at least one with a measurable outcome, and often time at an agency or in-house team rather than solo work alone." },
+        { label: "Strong proficiency in Figma", check: (cv) => /figma/i.test(cv) ? "match" : "gap",
+          gapNote: "No mention of Figma in your profile.", ref: "" },
+        { label: "Experience designing for fintech or financial products", check: (cv) => /(uba|bank|fintech)/i.test(cv) ? "match" : "gap",
+          gapNote: "Nothing fintech-specific found.", ref: "" },
+        { label: "Portfolio demonstrating end-to-end product thinking", check: (cv) => /(portfolio|netlify)/i.test(cv) ? "match" : "gap",
+          gapNote: "No portfolio link found.", ref: "" }
+      ]
+    },
+    "brightpath-junior-designer": {
+      company: "Brightpath",
+      role: "Junior Product Designer",
+      contradictory: false,
+      requirements: [
+        { label: "0\u20132 years experience, or a strong self-directed portfolio", check: () => "match",
+          gapNote: "", ref: "" },
+        { label: "Comfortable working in Figma", check: (cv) => /figma/i.test(cv) ? "match" : "gap",
+          gapNote: "No mention of Figma in your profile.", ref: "" },
+        { label: "Able to explain design decisions clearly", check: (cv) => /(audit|design)/i.test(cv) ? "match" : "gap",
+          gapNote: "", ref: "" },
+        { label: "Portfolio showing real or self-initiated projects", check: (cv) => /(portfolio|phoneplugng|netlify)/i.test(cv) ? "match" : "gap",
+          gapNote: "No real or self-initiated projects found.", ref: "" }
+      ]
+    },
+    "ninera-labs-designer": {
+      company: "Ninera Labs",
+      role: "Junior / Entry-Level Product Designer",
+      contradictory: true,
+      requirements: [
+        { label: "5+ years of commercial UI/UX experience required", check: (cv) => /1\.5\s*years?/i.test(cv) ? "gap" : "match",
+          gapNote: "Your applied experience is about 1.5 years, well under the 5+ this line asks for.",
+          ref: "A CV built for a 5+-year requirement typically includes a title progression (junior to mid to senior), ownership of a full design system, and mentoring or leading other designers, not just individual project work." },
+        { label: "Figma proficiency", check: (cv) => /figma/i.test(cv) ? "match" : "gap", gapNote: "", ref: "" },
+        { label: "Comfortable in a fast-paced startup, wearing many hats", check: () => "match", gapNote: "", ref: "" }
+      ]
+    }
+  };
+
+  const cvInput = document.getElementById("cv-input");
+  const urlInput = document.getElementById("url-input");
+  const textField = document.getElementById("text-field");
+  const textInput = document.getElementById("text-input");
+  const toggleTextBtn = document.getElementById("toggle-text-btn");
+  const checkBtn = document.getElementById("check-btn");
+  const resultEl = document.getElementById("result");
+  const verdictBox = document.getElementById("verdict-box");
+  const reqList = document.getElementById("req-list");
+  const saveBtn = document.getElementById("save-btn");
+  const savedList = document.getElementById("saved-list");
+  const emptyNote = document.getElementById("empty-note");
+
+  let currentResult = null;
+
+  toggleTextBtn.addEventListener("click", () => {
+    const showing = textField.style.display !== "none";
+    textField.style.display = showing ? "none" : "block";
+    toggleTextBtn.textContent = showing ? "or paste the posting text instead" : "or use the URL field instead";
+  });
+
+  function slugFromUrl(url) {
+    const key = Object.keys(POSTINGS).find((k) => url.toLowerCase().includes(k));
+    return key || null;
+  }
+
+  function evaluate(posting, cv) {
+    const results = posting.requirements.map((r) => {
+      const status = r.check(cv);
+      return { label: r.label, status, note: status === "gap" ? r.gapNote : "", ref: r.ref };
+    });
+    const gaps = results.filter((r) => r.status === "gap").length;
+    let tone, title, sub;
+    if (posting.contradictory) {
+      tone = "alert";
+      title = "This posting contradicts itself";
+      sub = "It's labeled junior or entry-level, but at least one requirement asks for senior-level experience. Worth applying with that in mind, not assuming the title reflects the real bar.";
+    } else if (gaps === 0) {
+      tone = "match";
+      title = "Go ahead \u2014 this is a solid fit";
+      sub = "You meet every requirement listed.";
+    } else {
+      tone = "gap";
+      title = "Worth applying, but it's a stretch";
+      sub = gaps + " of " + results.length + " requirements are a gap right now, see below for what's missing.";
+    }
+    return { company: posting.company, role: posting.role, tone, title, sub, results };
+  }
+
+  function renderResult(result) {
+    currentResult = result;
+    verdictBox.innerHTML =
+      '<div class="verdict tone-' + result.tone + '">' +
+      '<div><p class="verdict-title">' + result.title + '</p>' +
+      '<p class="verdict-sub">' + result.company + ' \u00b7 ' + result.role + '<br>' + result.sub + '</p></div></div>';
+
+    reqList.innerHTML = "";
+    result.results.forEach((r, i) => {
+      const el = document.createElement("div");
+      el.className = "req";
+      let html =
+        '<div class="req-head"><span class="req-tag ' + r.status + '">' + (r.status === "match" ? "MATCH" : "GAP") + '</span>' +
+        '<span class="req-label">' + r.label + '</span></div>';
+      if (r.note) html += '<p class="req-note">' + r.note + '</p>';
+      if (r.ref) html += '<button type="button" class="ref-toggle" data-i="' + i + '">What a stronger match usually looks like</button>' +
+        '<div class="ref-block" id="ref-' + i + '">' + r.ref + '</div>';
+      el.innerHTML = html;
+      reqList.appendChild(el);
+    });
+
+    reqList.querySelectorAll(".ref-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.getElementById("ref-" + btn.dataset.i).classList.toggle("is-open");
+      });
+    });
+
+    resultEl.classList.add("is-visible");
+    resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  checkBtn.addEventListener("click", () => {
+    const cv = cvInput.value;
+    const usingText = textField.style.display !== "none" && textInput.value.trim();
+    let key = null;
+    if (usingText) {
+      key = Object.keys(POSTINGS).find((k) =>
+        textInput.value.toLowerCase().includes(POSTINGS[k].company.toLowerCase())
+      );
+    } else {
+      key = slugFromUrl(urlInput.value.trim());
+    }
+    if (!key) key = "voltra-product-designer"; // fallback demo posting
+    renderResult(evaluate(POSTINGS[key], cv));
+  });
+
+  /* ---------- Saved list (localStorage) ---------- */
+
+  function loadSaved() {
+    try {
+      const raw = localStorage.getItem("fitcheck-saved");
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  function persistSaved(list) {
+    try { localStorage.setItem("fitcheck-saved", JSON.stringify(list)); } catch (e) {}
+  }
+
+  function renderSaved() {
+    const list = loadSaved();
+    savedList.innerHTML = "";
+    emptyNote.style.display = list.length ? "none" : "block";
+    list.forEach((item) => {
+      const el = document.createElement("div");
+      el.className = "saved-item";
+      el.innerHTML =
+        '<span class="saved-dot ' + item.tone + '"></span>' +
+        '<div class="saved-main"><div class="saved-company">' + item.company + ' \u2014 ' + item.role + '</div>' +
+        '<div class="saved-meta">' + item.title + ' \u00b7 ' + item.date + '</div></div>' +
+        '<button type="button" class="saved-delete" aria-label="Delete">\u2715</button>';
+      el.querySelector(".saved-delete").addEventListener("click", () => {
+        persistSaved(loadSaved().filter((x) => x.id !== item.id));
+        renderSaved();
+      });
+      savedList.appendChild(el);
+    });
+  }
+
+  saveBtn.addEventListener("click", () => {
+    if (!currentResult) return;
+    const list = loadSaved();
+    list.unshift({
+      id: Date.now().toString(36),
+      company: currentResult.company,
+      role: currentResult.role,
+      title: currentResult.title,
+      tone: currentResult.tone,
+      date: new Date().toLocaleDateString()
+    });
+    persistSaved(list);
+    renderSaved();
+  });
+
+  renderSaved();
+})();
+</script>
+
+</body>
+</html>

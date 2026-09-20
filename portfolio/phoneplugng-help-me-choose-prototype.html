@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PhonePlugNG: Help Me Choose Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #121214;
+    --surface: #1C1C1F;
+    --surface-raised: #232327;
+    --ink: #F2EFE9;
+    --ink-soft: #9C9A96;
+    --border: #2B2B2F;
+    --accent: #FF7A29;
+    --accent-ink: #1A0D02;
+    --whatsapp: #25D366;
+    --whatsapp-ink: #062412;
+    --shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.7);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121214; --surface: #1C1C1F; --surface-raised: #232327;
+      --ink: #F2EFE9; --ink-soft: #9C9A96; --border: #2B2B2F;
+      --accent: #FF7A29; --accent-ink: #1A0D02;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #121214; --surface: #1C1C1F; --surface-raised: #232327;
+    --ink: #F2EFE9; --ink-soft: #9C9A96; --border: #2B2B2F;
+    --accent: #FF7A29; --accent-ink: #1A0D02;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  h1, h2, .brand, .btn-accent, .help-btn, .chat-title, .send-btn {
+    font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  }
+
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+  }
+
+  .brand span { color: var(--accent); }
+
+  /* ---------- Toolbar ---------- */
+
+  .toolbar {
+    margin-bottom: 24px;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .search-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+
+  .search-row input::placeholder { color: var(--ink-soft); }
+  .search-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .help-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .help-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .help-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .help-btn:hover { filter: brightness(1.06); }
+
+  .pills {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .pill {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .pill.is-active {
+    border-color: var(--accent);
+    color: var(--ink);
+    background: rgba(255, 122, 41, 0.12);
+  }
+
+  /* ---------- Catalog grid ---------- */
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: var(--surface-raised);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon svg { width: 18px; height: 18px; }
+
+  .card-tier {
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  .card-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .card-price {
+    font-size: 0.9rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: auto;
+  }
+
+  .ask-btn {
+    border: none;
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .ask-btn:hover { background: var(--border); }
+  .ask-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Toast ---------- */
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 8px);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    max-width: min(360px, calc(100vw - 32px));
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 60;
+  }
+
+  .toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* ---------- Chat overlay ---------- */
+
+  .chat-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 8, 9, 0.55);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 50;
+  }
+
+  .chat-overlay[hidden] { display: none; }
+
+  .chat-panel {
+    width: 380px;
+    max-width: 100%;
+    height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    animation: slide-in 0.2s ease-out;
+  }
+
+  @keyframes slide-in {
+    from { transform: translateX(24px); opacity: 0.6; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chat-panel { animation: none; }
+  }
+
+  @media (max-width: 640px) {
+    .chat-overlay { align-items: flex-end; }
+    .chat-panel { width: 100%; height: 82vh; border-left: none; border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; }
+    @keyframes slide-in { from { transform: translateY(24px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chat-title { font-weight: 600; font-size: 0.95rem; }
+
+  .chat-header-actions { display: flex; align-items: center; gap: 14px; }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 0.78rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+
+  .icon-btn:focus-visible, .link-btn:focus-visible { outline: 2px solid var(--accent); }
+
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .msg {
+    max-width: 88%;
+    padding: 10px 13px;
+    border-radius: 14px;
+    font-size: 0.87rem;
+    line-height: 1.5;
+  }
+
+  .msg.assistant {
+    align-self: flex-start;
+    background: var(--surface-raised);
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-bottom-right-radius: 4px;
+    font-weight: 500;
+  }
+
+  .rec-card {
+    align-self: stretch;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .rec-name { font-weight: 600; font-size: 0.9rem; }
+  .rec-price { color: var(--accent); font-size: 0.82rem; font-weight: 600; }
+  .rec-note { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.5; }
+
+  .rec-pick {
+    margin-top: 4px;
+    align-self: flex-start;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .rec-pick:hover { background: rgba(255, 122, 41, 0.12); }
+  .rec-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .whatsapp-btn {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: var(--whatsapp);
+    color: var(--whatsapp-ink);
+    font-family: 'Sora', inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 9px;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .whatsapp-btn:hover { filter: brightness(1.05); }
+  .whatsapp-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .keep-browsing-btn {
+    align-self: flex-start;
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 0.82rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 2px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 18px 12px;
+  }
+
+  .chip {
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 7px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .chip:hover { border-color: var(--accent); }
+  .chip:focus-visible { outline: 2px solid var(--accent); }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .chat-input-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.87rem;
+  }
+
+  .chat-input-row input::placeholder { color: var(--ink-soft); }
+  .chat-input-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .send-btn {
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0 16px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+
+  .send-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="topbar">
+    <div class="brand">PhonePlug<span>NG</span></div>
+  </header>
+
+  <section class="toolbar">
+    <div class="search-row">
+      <input type="text" id="search" placeholder="Search phones, e.g. iPhone" />
+      <button type="button" class="help-btn" id="help-choose-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 18h.01M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+          <path d="M11 9a1.5 1.5 0 1 1 2 1.4c-.7.3-1 .9-1 1.6"/>
+        </svg>
+        Help me choose
+      </button>
+    </div>
+    <div class="pills" id="pills">
+      <button class="pill is-active" data-tier="all">All</button>
+      <button class="pill" data-tier="budget">Budget</button>
+      <button class="pill" data-tier="mid">Mid-range</button>
+      <button class="pill" data-tier="flagship">Flagship</button>
+    </div>
+  </section>
+
+  <section class="grid" id="grid"></section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="chat-overlay" id="chat-overlay" hidden>
+  <div class="chat-panel" role="dialog" aria-label="Help me choose">
+    <div class="chat-header">
+      <span class="chat-title">Help me choose</span>
+      <div class="chat-header-actions">
+        <button type="button" class="link-btn" id="chat-reset">Reset</button>
+        <button type="button" class="icon-btn" id="chat-close" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="chat-body" id="chat-body" aria-live="polite"></div>
+    <div class="chips" id="chips"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Type your answer\u2026" />
+      <button type="button" class="send-btn" id="chat-send">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const CATALOG = [
+    { id: "spark20", name: "Tecno Spark 20", price: 85000, tier: "budget", tags: ["everyday"], strength: "Reliable everyday phone with long battery life.", tradeoff: "Camera is basic \u2014 not built for content creation." },
+    { id: "note12", name: "Redmi Note 12", price: 98000, tier: "budget", tags: ["everyday", "camera"], strength: "Bright display and a decent camera for the price.", tradeoff: "Struggles with heavier games." },
+    { id: "camon20", name: "Tecno Camon 20", price: 115000, tier: "budget", tags: ["camera", "everyday"], strength: "One of the best cameras under \u20a6150k.", tradeoff: "Battery is average \u2014 not a gaming phone." },
+    { id: "a54", name: "Samsung Galaxy A54", price: 185000, tier: "mid", tags: ["camera", "everyday", "gaming"], strength: "Strong all-round camera and battery life.", tradeoff: "Handles gaming fine, but not built for heavy titles." },
+    { id: "ip11", name: "iPhone 11", price: 205000, tier: "mid", tags: ["camera", "everyday"], strength: "Excellent camera, smooth day-to-day performance.", tradeoff: "Battery health varies unit to unit at this age." },
+    { id: "ip12", name: "iPhone 12", price: 255000, tier: "mid", tags: ["camera", "gaming", "everyday"], strength: "Great camera and reliable all-round performance.", tradeoff: "Costs more than the A54 for a similar everyday feel." },
+    { id: "s22", name: "Samsung Galaxy S22", price: 295000, tier: "flagship", tags: ["gaming", "camera"], strength: "Flagship-level gaming performance.", tradeoff: "Priced above most everyday budgets." },
+    { id: "ip13", name: "iPhone 13", price: 345000, tier: "flagship", tags: ["gaming", "camera", "content"], strength: "Best camera and video quality in stock.", tradeoff: "The highest price point in the catalog." }
+  ];
+
+  const naira = (n) => "\u20a6" + n.toLocaleString("en-NG");
+  const priceLine = (n) => naira(n) + " \u00b7 as of today";
+
+  const grid = document.getElementById("grid");
+  const search = document.getElementById("search");
+  const pills = document.getElementById("pills");
+  const toast = document.getElementById("toast");
+
+  function phoneIcon() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>';
+  }
+
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add("is-visible");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove("is-visible"), 3200);
+  }
+
+  function askAbout(phone) {
+    showToast('Would open WhatsApp: "Hi, is the ' + phone.name + ' (' + naira(phone.price) + ') still available?"');
+  }
+
+  function renderGrid() {
+    const q = search.value.trim().toLowerCase();
+    const activeTier = pills.querySelector(".pill.is-active").dataset.tier;
+    grid.innerHTML = "";
+    CATALOG.filter((p) => {
+      const matchesQuery = !q || p.name.toLowerCase().includes(q);
+      const matchesTier = activeTier === "all" || p.tier === activeTier;
+      return matchesQuery && matchesTier;
+    }).forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML =
+        '<div class="card-icon">' + phoneIcon() + '</div>' +
+        '<span class="card-tier">' + p.tier.charAt(0).toUpperCase() + p.tier.slice(1) + '</span>' +
+        '<p class="card-name">' + p.name + '</p>' +
+        '<span class="card-price">' + naira(p.price) + '</span>' +
+        '<button type="button" class="ask-btn">Ask \u2192</button>';
+      card.querySelector(".ask-btn").addEventListener("click", () => askAbout(p));
+      grid.appendChild(card);
+    });
+  }
+
+  search.addEventListener("input", renderGrid);
+  pills.addEventListener("click", (e) => {
+    const btn = e.target.closest(".pill");
+    if (!btn) return;
+    pills.querySelectorAll(".pill").forEach((p) => p.classList.remove("is-active"));
+    btn.classList.add("is-active");
+    renderGrid();
+  });
+
+  renderGrid();
+
+  /* ---------- Chat assistant ---------- */
+
+  const overlay = document.getElementById("chat-overlay");
+  const chatBody = document.getElementById("chat-body");
+  const chipsEl = document.getElementById("chips");
+  const chatInput = document.getElementById("chat-input");
+  const helpBtn = document.getElementById("help-choose-btn");
+  const closeBtn = document.getElementById("chat-close");
+  const resetBtn = document.getElementById("chat-reset");
+  const sendBtn = document.getElementById("chat-send");
+
+  let step = "budget";
+  let budgetBucket = null;
+  let useCaseTag = null;
+
+  const BUDGET_CHIPS = [
+    { label: "Under \u20a6100k", value: "budget" },
+    { label: "\u20a6100k\u2013\u20a6200k", value: "low-mid" },
+    { label: "\u20a6200k\u2013\u20a6300k", value: "mid" },
+    { label: "\u20a6300k+", value: "flagship" }
+  ];
+
+  const USE_CASE_CHIPS = [
+    { label: "Camera / content", value: "camera" },
+    { label: "Gaming", value: "gaming" },
+    { label: "Everyday & WhatsApp", value: "everyday" },
+    { label: "Not sure yet", value: "unsure" }
+  ];
+
+  function addMessage(role, html) {
+    const el = document.createElement("div");
+    el.className = "msg " + role;
+    el.innerHTML = html;
+    chatBody.appendChild(el);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return el;
+  }
+
+  function setChips(list, onPick) {
+    chipsEl.innerHTML = "";
+    list.forEach((c) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.textContent = c.label;
+      b.addEventListener("click", () => onPick(c));
+      chipsEl.appendChild(b);
+    });
+  }
+
+  function parseBudget(text) {
+    const digits = text.replace(/,/g, "").match(/\d+(\.\d+)?\s*k?/gi);
+    if (!digits) return null;
+    let nums = digits.map((d) => {
+      d = d.trim().toLowerCase();
+      if (d.endsWith("k")) return parseFloat(d) * 1000;
+      let n = parseFloat(d);
+      return n < 2000 ? n * 1000 : n; // treat small bare numbers as "k" shorthand
+    });
+    const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+    if (avg < 100000) return "budget";
+    if (avg < 200000) return "low-mid";
+    if (avg < 300000) return "mid";
+    return "flagship";
+  }
+
+  function parseUseCase(text) {
+    const t = text.toLowerCase();
+    if (/(camera|content|photo|video|film)/.test(t)) return "camera";
+    if (/(game|gaming|pubg|cod|fps)/.test(t)) return "gaming";
+    if (/(call|whatsapp|everyday|basic|browsing|normal)/.test(t)) return "everyday";
+    return "unsure";
+  }
+
+  const BUCKET_RANGE = {
+    "budget": [0, 100000],
+    "low-mid": [100000, 200000],
+    "mid": [200000, 300000],
+    "flagship": [300000, Infinity]
+  };
+
+  function recommend(bucket, tag) {
+    const [lo, hi] = BUCKET_RANGE[bucket];
+    let inRange = CATALOG.filter((p) => p.price >= lo * 0.85 && p.price <= (hi === Infinity ? Infinity : hi * 1.1));
+    if (inRange.length === 0) {
+      inRange = [...CATALOG].sort((a, b) => Math.abs(a.price - (lo + Math.min(hi, lo + 100000)) / 2) - Math.abs(b.price - (lo + Math.min(hi, lo + 100000)) / 2));
+    }
+    if (tag && tag !== "unsure") {
+      inRange = [...inRange].sort((a, b) => (b.tags.includes(tag) ? 1 : 0) - (a.tags.includes(tag) ? 1 : 0));
+    }
+    return inRange.slice(0, Math.min(3, Math.max(2, inRange.length)));
+  }
+
+  function showResults() {
+    const picks = recommend(budgetBucket, useCaseTag);
+    addMessage("assistant", "Here's what I'd go with, given your budget and what you need it for:");
+    picks.forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "rec-card";
+      card.innerHTML =
+        '<span class="rec-name">' + p.name + '</span>' +
+        '<span class="rec-price">' + priceLine(p.price) + '</span>' +
+        '<span class="rec-note"><strong>' + p.strength + '</strong></span>' +
+        '<span class="rec-note">' + p.tradeoff + '</span>' +
+        '<button type="button" class="rec-pick">This one</button>';
+      card.querySelector(".rec-pick").addEventListener("click", () => pickPhone(p));
+      chatBody.appendChild(card);
+    });
+    chatBody.scrollTop = chatBody.scrollHeight;
+    step = "results";
+    chipsEl.innerHTML = "";
+  }
+
+  function pickPhone(phone) {
+    addMessage("user", "This one \u2014 " + phone.name);
+    const wrap = document.createElement("div");
+    wrap.className = "msg assistant";
+    wrap.innerHTML = "Good pick. Want to ask about it on WhatsApp, or keep browsing first?";
+    chatBody.appendChild(wrap);
+
+    const waBtn = document.createElement("button");
+    waBtn.type = "button";
+    waBtn.className = "whatsapp-btn";
+    waBtn.innerHTML = "Chat on WhatsApp \u2192";
+    waBtn.addEventListener("click", () => askAbout(phone));
+
+    const browseBtn = document.createElement("button");
+    browseBtn.type = "button";
+    browseBtn.className = "keep-browsing-btn";
+    browseBtn.textContent = "Keep browsing";
+    browseBtn.addEventListener("click", closeChat);
+
+    chatBody.appendChild(waBtn);
+    chatBody.appendChild(browseBtn);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function handleBudgetAnswer(label, bucket) {
+    addMessage("user", label);
+    budgetBucket = bucket;
+    step = "usecase";
+    addMessage("assistant", "Got it. What will you mainly use it for?");
+    setChips(USE_CASE_CHIPS, (c) => handleUseCaseAnswer(c.label, c.value));
+  }
+
+  function handleUseCaseAnswer(label, tag) {
+    addMessage("user", label);
+    useCaseTag = tag;
+    showResults();
+  }
+
+  function handleFreeText() {
+    const val = chatInput.value.trim();
+    if (!val) return;
+    chatInput.value = "";
+    if (step === "budget") {
+      const bucket = parseBudget(val) || "low-mid";
+      handleBudgetAnswer(val, bucket);
+    } else if (step === "usecase") {
+      handleUseCaseAnswer(val, parseUseCase(val));
+    } else {
+      addMessage("user", val);
+    }
+  }
+
+  function startChat() {
+    chatBody.innerHTML = "";
+    step = "budget";
+    budgetBucket = null;
+    useCaseTag = null;
+    addMessage("assistant", "Let's find your next phone. What's your budget?");
+    setChips(BUDGET_CHIPS, (c) => handleBudgetAnswer(c.label, c.value));
+  }
+
+  function openChat() {
+    overlay.hidden = false;
+    if (chatBody.children.length === 0) startChat();
+    chatInput.focus();
+  }
+
+  function closeChat() {
+    overlay.hidden = true;
+  }
+
+  helpBtn.addEventListener("click", openChat);
+  closeBtn.addEventListener("click", closeChat);
+  resetBtn.addEventListener("click", startChat);
+  sendBtn.addEventListener("click", handleFreeText);
+  chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") handleFreeText(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !overlay.hidden) closeChat(); });
+
+  document.querySelectorAll(".grid .ask-btn").forEach(() => {}); // grid asks are bound in renderGrid
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trustline: AI Verification Assistant Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF1F6;
+    --surface: #FFFFFF;
+    --ink: #101826;
+    --ink-soft: #55607A;
+    --border: #D8DEE9;
+    --primary: #16264A;
+    --primary-ink: #FFFFFF;
+    --accent: #C98A2B;
+    --accent-ink: #241505;
+    --danger: #B23A2E;
+    --success: #2F7A52;
+    --shadow: 0 20px 40px -20px rgba(16, 24, 38, 0.35);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1420;
+      --surface: #161D2C;
+      --ink: #EDF1F8;
+      --ink-soft: #A9B3C7;
+      --border: #2A3348;
+      --primary: #3A5A96;
+      --primary-ink: #FFFFFF;
+      --accent: #E3A94C;
+      --accent-ink: #1B1002;
+      --danger: #E2685A;
+      --success: #4FAE7C;
+      --shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0E1420;
+    --surface: #161D2C;
+    --ink: #EDF1F8;
+    --ink-soft: #A9B3C7;
+    --border: #2A3348;
+    --primary: #3A5A96;
+    --primary-ink: #FFFFFF;
+    --accent: #E3A94C;
+    --accent-ink: #1B1002;
+    --danger: #E2685A;
+    --success: #4FAE7C;
+    --shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .stage {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) {
+    .stage {
+      grid-template-columns: 1fr;
+      padding: 32px 16px 48px;
+      gap: 28px;
+    }
+  }
+
+  /* ---------- Phone mock ---------- */
+
+  .phone-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  .phone {
+    position: relative;
+    width: 320px;
+    max-width: 100%;
+    background: var(--surface);
+    border-radius: 34px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 14px 14px 46px;
+    overflow: visible;
+  }
+
+  .phone-notch {
+    width: 92px;
+    height: 6px;
+    border-radius: 4px;
+    background: var(--border);
+    margin: 0 auto 18px;
+  }
+
+  .app-header {
+    padding: 4px 6px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 22px;
+  }
+
+  .brand-mark {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--primary);
+  }
+
+  .app-body { padding: 0 6px; }
+
+  .screen-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 22px;
+    color: var(--ink);
+  }
+
+  .field {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+
+  .field input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .field input.is-flagged {
+    border-color: var(--danger);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: var(--primary-ink);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Assistant ---------- */
+
+  .assistant {
+    position: absolute;
+    right: -10px;
+    bottom: -26px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    z-index: 5;
+  }
+
+  .bubble {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px -8px rgba(16, 24, 38, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .bubble:hover { transform: translateY(-1px); }
+  .bubble:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bubble-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+  }
+
+  .bubble-dot svg { width: 20px; height: 20px; }
+
+  .assistant[data-state="idle"] .bubble-dot {
+    background: var(--ink-soft);
+    animation: idle-breathe 4.5s ease-in-out infinite;
+  }
+
+  .assistant[data-state="nudge"] .bubble-dot,
+  .assistant[data-state="routeA"] .bubble-dot,
+  .assistant[data-state="routeB"] .bubble-dot,
+  .assistant[data-state="escalate"] .bubble-dot {
+    background: var(--accent);
+  }
+
+  .assistant[data-state="success"] .bubble-dot {
+    background: var(--success);
+  }
+
+  @keyframes idle-breathe {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 24, 38, 0); }
+    50% { box-shadow: 0 0 0 6px rgba(16, 24, 38, 0.06); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .assistant[data-state="idle"] .bubble-dot { animation: none; }
+  }
+
+  .bubble-chip {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink);
+    padding-right: 4px;
+    white-space: nowrap;
+    display: none;
+  }
+
+  .assistant.show-chip .bubble-chip { display: inline; }
+
+  /* ---------- Popover ---------- */
+
+  .popover {
+    position: relative;
+    width: 236px;
+    max-width: calc(100vw - 48px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px 18px 4px 18px;
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    display: none;
+    transform-origin: bottom right;
+  }
+
+  .popover::after {
+    content: "";
+    position: absolute;
+    right: 16px;
+    bottom: -7px;
+    width: 14px;
+    height: 14px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transform: rotate(45deg);
+  }
+
+  .popover.is-open {
+    display: block;
+    animation: pop-in 0.16s ease-out;
+  }
+
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .popover.is-open { animation: none; }
+  }
+
+  .popover-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .popover-close:focus-visible { outline: 2px solid var(--accent); }
+
+  .popover-message {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ink);
+    margin: 4px 20px 14px 0;
+  }
+
+  .popover-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .popover-actions button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-quiet {
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 999px;
+    padding: 8px 14px;
+  }
+
+  .btn-ghost {
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    padding: 8px 0;
+  }
+
+  .btn-escalate {
+    border: none;
+    background: var(--primary);
+    color: var(--primary-ink);
+    border-radius: 10px;
+    padding: 9px 14px;
+  }
+
+  .popover-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Notes panel ---------- */
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .panel h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+
+  .state-line {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+  }
+
+  .state-line strong { color: var(--ink); }
+
+  .panel-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .btn-secondary {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .btn-text {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 6px;
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .panel-note {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <section class="phone-wrap" aria-label="Trustline banking app preview">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="app">
+        <header class="app-header">
+          <span class="brand-mark">Trustline</span>
+        </header>
+        <div class="app-body">
+          <h1 class="screen-title">Log in to your account</h1>
+          <form id="login-form" novalidate>
+            <label class="field">
+              <span class="field-label">User ID</span>
+              <input type="text" id="user-id" name="user-id" placeholder="e.g. user98743" autocomplete="off" inputmode="text" />
+            </label>
+            <label class="field">
+              <span class="field-label">Password</span>
+              <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="off" />
+            </label>
+            <button type="submit" class="btn-primary" id="login-btn">Log in</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="assistant" id="assistant" data-state="idle">
+        <div class="popover" id="popover" role="dialog" aria-label="Assistant">
+          <button type="button" class="popover-close" id="popover-close" aria-label="Close">✕</button>
+          <p class="popover-message" id="popover-message" aria-live="polite"></p>
+          <div class="popover-actions" id="popover-actions"></div>
+        </div>
+
+        <button type="button" class="bubble" id="bubble-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="popover" aria-label="Need help logging in?">
+          <span class="bubble-chip" id="bubble-chip">Stuck? I can help.</span>
+          <span class="bubble-dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Prototype notes">
+    <h2>Prototype walkthrough</h2>
+    <p class="state-line">Current state: <strong id="state-label">Idle</strong></p>
+    <div class="panel-controls">
+      <button type="button" class="btn-secondary" id="sim-wrong">Simulate wrong ID submit</button>
+      <button type="button" class="btn-secondary" id="sim-stall">Simulate 15s stall</button>
+      <button type="button" class="btn-text" id="sim-reset">Reset</button>
+    </div>
+    <p class="panel-note">
+      Two things trigger the assistant: submitting a purely numeric value in the User ID field (read as an account number by mistake) opens guidance immediately, or 15 seconds pass with no submit attempt at all. Either way, it only explains where to find things — it never displays or confirms a specific account value, so no identity verification step is needed to help. Two failed suggestions hand off to a person.
+    </p>
+  </aside>
+
+</div>
+
+<script>
+(function () {
+  const idInput = document.getElementById('user-id');
+  const passwordInput = document.getElementById('password');
+  const form = document.getElementById('login-form');
+  const assistant = document.getElementById('assistant');
+  const bubbleBtn = document.getElementById('bubble-btn');
+  const popover = document.getElementById('popover');
+  const popoverMessage = document.getElementById('popover-message');
+  const popoverActions = document.getElementById('popover-actions');
+  const popoverClose = document.getElementById('popover-close');
+  const stateLabel = document.getElementById('state-label');
+
+  const simWrong = document.getElementById('sim-wrong');
+  const simStall = document.getElementById('sim-stall');
+  const simReset = document.getElementById('sim-reset');
+
+  const MESSAGES = {
+    wrongFormat: "That looks like your account number \u2014 your User ID is different. Check the SMS you got when you opened your account; it's listed there.",
+    idleNudge: "Not sure where your User ID is? Check the SMS you got when you opened your account \u2014 it's listed there.",
+    routeB: "No luck there? Check the email we sent when you opened your account, subject line \u201cWelcome to Trustline.\u201d Your User ID is in there too.",
+    escalate: "Let's get you a person who can look this up safely.",
+    connecting: "Connecting you to a support agent now.",
+    success: "Glad that helped."
+  };
+
+  const STATE_LABELS = {
+    idle: "Idle",
+    nudge: "Nudge (waiting on click)",
+    routeA: "Guiding \u2014 first suggestion",
+    routeB: "Guiding \u2014 second suggestion",
+    escalate: "Escalated to human support",
+    success: "Resolved"
+  };
+
+  let stage = "idle";
+  let idleTimer = null;
+
+  function setStage(next) {
+    stage = next;
+    assistant.dataset.state = next;
+    stateLabel.textContent = STATE_LABELS[next] || next;
+  }
+
+  function clearIdleTimer() {
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+  }
+
+  function startIdleTimer() {
+    clearIdleTimer();
+    idleTimer = setTimeout(triggerNudge, 15000);
+  }
+
+  function triggerNudge() {
+    if (stage !== "idle") return;
+    setStage("nudge");
+    assistant.classList.add("show-chip");
+  }
+
+  function renderActions(mode) {
+    popoverActions.innerHTML = "";
+    if (mode === "guide") {
+      const found = document.createElement("button");
+      found.type = "button";
+      found.className = "btn-quiet";
+      found.textContent = "Found it, thanks";
+      found.addEventListener("click", handleFound);
+
+      const stuck = document.createElement("button");
+      stuck.type = "button";
+      stuck.className = "btn-ghost";
+      stuck.textContent = "Still can't find it";
+      stuck.addEventListener("click", handleStuck);
+
+      popoverActions.appendChild(found);
+      popoverActions.appendChild(stuck);
+      found.focus();
+    } else if (mode === "escalate") {
+      const chat = document.createElement("button");
+      chat.type = "button";
+      chat.className = "btn-escalate";
+      chat.textContent = "Chat with support";
+      chat.addEventListener("click", handleEscalateClick);
+      popoverActions.appendChild(chat);
+      chat.focus();
+    }
+  }
+
+  function openPopover() {
+    popover.classList.add("is-open");
+    bubbleBtn.setAttribute("aria-expanded", "true");
+    assistant.classList.remove("show-chip");
+  }
+
+  function closePopover(returnFocus) {
+    popover.classList.remove("is-open");
+    bubbleBtn.setAttribute("aria-expanded", "false");
+    if (stage !== "idle" && stage !== "success") {
+      assistant.classList.add("show-chip");
+    }
+    if (returnFocus) bubbleBtn.focus();
+  }
+
+  function showRouteA(reason) {
+    clearIdleTimer();
+    setStage("routeA");
+    popoverMessage.textContent = reason === "wrong-format" ? MESSAGES.wrongFormat : MESSAGES.idleNudge;
+    renderActions("guide");
+    openPopover();
+    if (reason === "wrong-format") idInput.classList.add("is-flagged");
+  }
+
+  function showRouteB() {
+    setStage("routeB");
+    popoverMessage.textContent = MESSAGES.routeB;
+    renderActions("guide");
+    openPopover();
+  }
+
+  function showEscalate() {
+    setStage("escalate");
+    popoverMessage.textContent = MESSAGES.escalate;
+    renderActions("escalate");
+    openPopover();
+  }
+
+  function showSuccess() {
+    setStage("success");
+    idInput.classList.remove("is-flagged");
+    popoverMessage.textContent = MESSAGES.success;
+    renderActions("none");
+    openPopover();
+    setTimeout(resetToIdle, 1600);
+  }
+
+  function handleFound() { showSuccess(); }
+
+  function handleStuck() {
+    if (stage === "routeA") showRouteB();
+    else if (stage === "routeB") showEscalate();
+  }
+
+  function handleEscalateClick() {
+    popoverMessage.textContent = MESSAGES.connecting;
+    renderActions("none");
+    setTimeout(resetToIdle, 1800);
+  }
+
+  function resetToIdle() {
+    setStage("idle");
+    idInput.classList.remove("is-flagged");
+    assistant.classList.remove("show-chip");
+    closePopover(false);
+    startIdleTimer();
+  }
+
+  bubbleBtn.addEventListener("click", function () {
+    if (popover.classList.contains("is-open")) {
+      closePopover(false);
+      return;
+    }
+    if (stage === "idle" || stage === "nudge") {
+      showRouteA("manual");
+    } else {
+      openPopover();
+    }
+  });
+
+  popoverClose.addEventListener("click", function () { closePopover(true); });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && popover.classList.contains("is-open")) closePopover(true);
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const val = idInput.value.trim();
+    if (val.length === 0) return;
+    const looksLikeAccountNumber = /^[0-9]+$/.test(val) && val.length >= 8;
+    if (looksLikeAccountNumber) {
+      showRouteA("wrong-format");
+    } else {
+      clearIdleTimer();
+      const original = document.getElementById("login-btn").textContent;
+      document.getElementById("login-btn").textContent = "Signing in\u2026";
+      setTimeout(function () {
+        document.getElementById("login-btn").textContent = original;
+      }, 900);
+    }
+  });
+
+  idInput.addEventListener("input", function () {
+    idInput.classList.remove("is-flagged");
+  });
+
+  simWrong.addEventListener("click", function () {
+    idInput.value = "0123456789";
+    showRouteA("wrong-format");
+  });
+
+  simStall.addEventListener("click", function () {
+    if (stage === "idle") triggerNudge();
+  });
+
+  simReset.addEventListener("click", function () {
+    idInput.value = "";
+    passwordInput.value = "";
+    resetToIdle();
+  });
+
+  startIdleTimer();
+})();
+</script>
+
+</body>
+</html>
